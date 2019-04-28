@@ -6,104 +6,97 @@
 #--------------------------------------------------------#
 
 import gym
+import random
 
-# class model of genetic algorithm
-class Model(object):
+# constants
+MAX_GENERATIONS = 30
+number_actions = 500
+percent_cross_over = 10 # e.g. 10 means 10% of total of actions
+percent_mutation = 0
 
-    def __init__ (self):
-        self.env = gym.make("BipedalWalker-v2")
-        self.reward = -100
+def get_action(env):
+    return env.action_space.sample()
 
-    def key_reward(self, DATA):
-        #return DATA[]
-        pass
+def get_n_worst(rewards, qtd):
 
-    def get_action(self):
-        
-        return self.env.action_space.sample()
-        '''
-        population = []
-        while len(population) != self.POPULATION_SIZE :
-            self.env.reset()
-            population.append(self.env.action_space.sample())
-        
-        DATA = []
-        for pop in population :
-            DATA.append(self.env.step(pop))
+	vector = []
+	for i in range(len(rewards)):
+		vector.append((i, rewards[i]))
 
-        maior = 0
-        for i in range(1, len(DATA)):
-            if DATA[maior][1] < DATA[i][1]:
-                maior = i
+	vector.sort(key=lambda tuple: tuple[1])
+	#print(vector)
+	
+	result = []
+	for i in range(qtd):
+		result.append(vector[i][0])
 
-        #if DATA[maior][1] > self.reward:
-        #    self.reward = DATA[maior][1]
-
-        observation, reward, done, info = DATA[maior]
-
-        print(observation)
-        print(reward)
-
-        return population[0]
-        '''
-
+	return result
+    
 # main function
 def main():
-    
-    m = Model()
-    
-    population = []
 
-    for _ in range(500):
-        population.append([-100, m.get_action()])
+	old_population = []
 
-    i = 0
-    while True :
-        print("generation %i:" %i)
+	env = gym.make("BipedalWalker-v2")
 
-        env = gym.make("BipedalWalker-v2")
-        env.reset()
+	for _ in range(number_actions):
+		old_population.append([-100, get_action(env)])
 
-        total = 0.0
+	i = 0
+	old_total = -100
+	while i < MAX_GENERATIONS:
+		print("generation %i:" %i)
 
-        arq = open("data/generation_"+str(i), "w")
-        for j in range(500):
-            
-            env.render()
+		env.reset()
 
-            action = population[j][1]
+		arq = open("data/generation_"+str(i), "w")
 
-            '''
-            # try create the best population 
-            if i > 0 :
-                # try a new action, can be a little better
-                if population[j][0] <= 0 :
-                    action = m.get_action()
-            '''
+		new_population = old_population.copy()
+		new_total = 0.0
 
-            print('Action: ', action)
-            observation, reward, done, info = env.step(action) # take a random action
-            
-            # update your result
-            print('Reward: ', reward)
+		#print(new_population)
 
-            if reward == -100 :
-                break
+		# It`s not necessary to do crossover on the first generations
+		if i > 0 :
+			get_actions_change = get_n_worst(
+				[r[0] for r in new_population],
+				number_actions*percent_cross_over//100)
+			print(get_actions_change)
+			for k in get_actions_change :
+				new_population[k] = [-100, get_action(env)]
 
-            if reward > population[j][0]:
-                population[j] = [reward, action]
+		for j in range(number_actions):
+			
+			env.render()
 
-            arq.write(str(population[j][1])+"\n")
-            arq.write(str(population[j][0])+"\n")
+			action = new_population[j][1]
+				
+			#print('Action: ', action)
+			observation, reward, done, info = env.step(action) # take a random action
 
-            total += reward
+			new_population[j][0] = reward
 
-        arq.close()
-        print("sum = ",total)
+			arq.write(str(new_population[j][1])+"\n")
+			arq.write(str(new_population[j][0])+"\n")
 
-        i += 1
+			if reward == -100 or j == number_actions-1 :
+				print(new_total)
+				if i == 0 :
+					old_total = new_total
+				elif new_total > old_total :
+					# update the new population
+					old_population = new_population.copy()
+					old_total = new_total
+					print("mudei o vetor old")
+				break
+			
+			new_total += reward
+			
+		arq.close()
 
-        env.close()
+		i += 1
+
+	env.close()
 
 
 if __name__ == "__main__":

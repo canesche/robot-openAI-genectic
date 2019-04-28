@@ -1,2 +1,4 @@
+setuptools
+wheel
 gym
 box2d-py
