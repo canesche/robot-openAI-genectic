@@ -5,6 +5,9 @@
 #   Prof.: Levi Lelis
 #--------------------------------------------------------#
 
+'''
+	Libraries used
+'''
 import gym
 import random
 import matplotlib.pyplot as plt
@@ -13,146 +16,73 @@ import sys
 import numpy as np 
 import copy
 
-# constants global
-MAX_GENERATIONS = 100
-ACTIONS_SIZE = 500
-EPOCH_SIZE = 500
-GENE_INIT_SIZE = 0
-GENE_SIZE = 16
-ELITE_SIZE = 15
-HALL_FAME = 5
-POPULATION_SIZE = 100 + ELITE_SIZE + HALL_FAME
-TOURNAMENT_SIZE = 10
-PERCENT_MUTATION = 30 # means 30% 
-EPSILON = 0.01
-DELTA = 0 
-env = gym.make("BipedalWalker-v2")
-
-class Individuo:
-	env = gym.make("BipedalWalker-v2")
-	def __init__(self):
-		self.action_init_size = 0 #random.randint(1, 10)
-		self.action_size = 16
-		self.action = [[random.uniform(-1,1) for _ in range(4)] for _ in range(self.action_size)]
-		self.action_init = [[random.uniform(-1,1) for _ in range(4)] for _ in range(self.action_init_size)]
+'''
+	Global Constants
+'''
+MAX_GENERATIONS = 100 	# Max generation per epoch
+ACTIONS_SIZE = 500	  	# Max actions have a individual
+EPOCH_SIZE = 500		# Max epoch 		
+GENE_INIT_SIZE = 4		# Size of Gene just began
+GENE_SIZE = 16			# Size of Gene used on loop
+ELITE_SIZE = 10			# Best chosen who will mutate 
+HALL_FAME = 5			# Best of each generation
+POPULATION_SIZE = 100 + ELITE_SIZE + HALL_FAME # Total of population
+TOURNAMENT_SIZE = 10	# Size of tournament
+PERCENT_MUTATION = 0.3 	# Probability of 30% to mutate
 
 def population_start():
-	ind = []
-	for _ in range(GENE_INIT_SIZE+GENE_SIZE):
-		#action = env.action_space.sample()
-		action = [random.uniform(-1,1) for _ in range(4)]
-		ind.append(action)
-	return ind
+	'''
+		Function: Population
+		It is begin create the population
+	'''
+	return [[random.uniform(-1,1) for _ in range(4)] for _ in range(GENE_INIT_SIZE+GENE_SIZE)]
 
 def crossover(p1, p2):
 	'''
-	p1 = np.matrix(p1)
-	p2 = np.matrix(p2)
-
-	part = random.randint(1, 4)
-
-	init_p1x = p1[:GENE_INIT_SIZE,0:part]
-	init_p2x = p2[:GENE_INIT_SIZE,part:4]
-
-	p1x = p1[GENE_INIT_SIZE:GENE_INIT_SIZE+GENE_SIZE,0:part]
-	p2x = p2[GENE_INIT_SIZE:GENE_INIT_SIZE+GENE_SIZE,part:4]
-
-	part = random.randint(1, 4)
-
-	init_p1y = p1[:GENE_INIT_SIZE,part:4]
-	init_p2y = p2[:GENE_INIT_SIZE,0:part]
-
-	p1y = p1[GENE_INIT_SIZE:GENE_INIT_SIZE+GENE_SIZE,part:4]
-	p2y = p2[GENE_INIT_SIZE:GENE_INIT_SIZE+GENE_SIZE,0:part]
-
-	aux_init_p1 = np.concatenate((init_p1x,init_p2x),axis=1)
-	aux_init_p2 = np.concatenate((init_p1y,init_p2y),axis=1)
-
-	aux_p1 = np.concatenate((p1x,p2x),axis=1)
-	aux_p2 = np.concatenate((p1y,p2y),axis=1)
-
-	c1 = list(np.array(aux_init_p1))+list(np.array(aux_p1))
-	c2 = list(np.array(aux_init_p2))+list(np.array(aux_p2))
-
-	return c1, c2
+		Function: Crossover
+		It is made the crossing between two individuals previously chosen
 	'''
-	part = random.randint(1, GENE_INIT_SIZE+GENE_SIZE-1)
-
 	c1, c2 = copy.deepcopy(p1), copy.deepcopy(p2)
 
-	c1[part:], c2[part:] = c2[part:], c1[part:]
+	c1_action_init = c1[:GENE_INIT_SIZE]
+	c2_action_init = c2[:GENE_INIT_SIZE]
+
+	part = random.randint(1, GENE_INIT_SIZE-1)
+
+	c1_action_init[:part], c2_action_init[:part] = c2_action_init[:part], c1_action_init[:part]
+
+	c1_action = c1[GENE_INIT_SIZE:]
+	c2_action = c2[GENE_INIT_SIZE:]
+
+	part = random.randint(1, GENE_SIZE-1)
+
+	c1_action[:part], c2_action[:part] = c2_action[:part], c1_action[:part]
+
+	c1 = c1_action_init + c1_action
+	c2 = c2_action_init + c2_action
 
 	return c1, c2
 
-'''
-	Function: Mutation
-	For each gene, there is a chance for mutation
-'''
-def mutation(ind):
 
+def mutation(ind):
+	'''
+		Function: Mutation
+		For each gene, there is a chance for mutation
+	'''
 	for i in range(len(ind)):
 		for j in range(len(ind[i])):
-			n = random.randint(0, 100)
+			n = random.random()
 			if n < PERCENT_MUTATION :
-				fator = EPSILON * (random.random()*2-1)
-				ind[i][j] += fator
-		
+				ind[i][j] += random.uniform(-0.5, 0.5)
 	return ind
 
-def evaluate(p, render=False):
-	env.reset()
-	score = 0
-
-	#step begin, size 10 of p
-	for i in range(GENE_INIT_SIZE):
-		if render:
-			env.render()
-		_, reward, _, _ = env.step(p[i])
-		score += reward
-	
-	# loop until ACTION_SIZE
-	i = 0
-	cont = 0
-	past_score = score
-	for _ in range(GENE_INIT_SIZE, ACTIONS_SIZE):
-		
-		if render:
-			env.render()
-		_, reward, done, _ = env.step(p[(i % GENE_SIZE)+GENE_INIT_SIZE])
-		score += reward
-
-		#print(score)
-		if score < past_score:
-			cont += 1
-
-		if done or cont == 200:
-			#print(done, cont)
-			break
-		past_score = score
-		i += 1
-
-	return score
-
-def tournament(ind):
-	best_tournament = ind[random.randint(0,POPULATION_SIZE-1)]
-
-	for _ in range(TOURNAMENT_SIZE):
-		n = random.randint(0, POPULATION_SIZE-1)
-		if best_tournament[0] < ind[n][0]:
-			best_tournament = ind[n]
-	
-	return best_tournament
-
-def plot(value, e):
-	plt.clf() # clean the plot
-	plt.plot(value)
-	plt.xlabel('Generations')
-	plt.ylabel('Adaptation value')
-	plt.savefig('figs/adaptation_epoch_'+str(e))
-
 def save(ind, e):
+	'''
+		Function: save
+		Responsible for saving the data of individual
+	'''
 	save_open = open("data/ind_best_epoch_"+str(e)+".txt", "w")
-	save_open.write(str(ind[0])+"\n")
+	save_open.write(str(ind[0])+" "+GENE_INIT_SIZE+" "+GENE_SIZE+"\n")
 	for i in range(len(ind[1])):
 		for j in range(len(ind[1][i])):
 			save_open.write(str(ind[1][i][j]))
@@ -162,44 +92,113 @@ def save(ind, e):
 	save_open.close()
 
 def load(path):
+	'''
+		Function: load
+		Responsible for loading the data of individual
+	'''
 	ind = []
 	arq = open(path, "r")
 	text = arq.readlines()
 	i = 0
 	lista = []
 	for line in text:
-		# ignore the first line
+		line = line.replace("\n", "").split(" ")
 		if i == 0:
+			global GENE_INIT_SIZE
+			global GENE_SIZE
+			GENE_INIT_SIZE, GENE_SIZE = int(line[1]), int(line[2])
+			print(GENE_INIT_SIZE, GENE_SIZE)
 			i = 1
 			continue
 		else:
-			line = line.replace("\n", "")
-			line = line.split(" ")
 			row = []
 			for j in range(len(line)):
 				row.append(float(line[j]))
 			lista.append(row)
 	arq.close()
 	return lista
+
+def evaluate(p, limit_steps=500, render=False):
+	'''
+		Function: evaluate or fitness
+		Responsible for evaluating and obtaining the adaptation value.
+	'''
+	env = gym.make("BipedalWalker-v2")
+	env.reset()
+	score = 0
+
+	print(GENE_INIT_SIZE, GENE_SIZE)
+
+	#step begin, size 4 of p
+	for i in range(GENE_INIT_SIZE):
+		if render:
+			env.render()
+		#input(i)
+		_, reward, _, _ = env.step(p[i])
+		score += reward
+	# loop until ACTION_SIZE
+	i = 0
+	cont = 0
+	past_score = score
+	for _ in range(GENE_INIT_SIZE, limit_steps):
+		if render:
+			env.render()
+		_, reward, done, _ = env.step(p[(i % GENE_SIZE)+GENE_INIT_SIZE])
+		score += reward
+
+		if score < past_score:
+			cont += 1
+
+		if score < -100 or cont == 200:
+			break
+		past_score = score
+		i += 1
+	env.close()
+	return score
+
+def tournament(ind):
+	'''
+		Function: tournament
+		Responsible for creating tournament to choose the best between them
+	'''
+	best_tournament = ind[random.randint(0,POPULATION_SIZE-1)]
+
+	participants = random.sample(range(0,POPULATION_SIZE-1), TOURNAMENT_SIZE)
+
+	for n in participants:
+		if best_tournament[0] < ind[n][0]:
+			best_tournament = ind[n]
 	
+	return best_tournament
 
-# main function
+def plot(value, e):
+	'''
+		Function: plot
+		Responsible for plotting graphics and statistics
+	'''
+	plt.clf() # clean the plot
+	plt.plot(value)
+	plt.xlabel('Generations')
+	plt.ylabel('Adaptation value')
+	plt.savefig('figs/adaptation_epoch_'+str(e))
+	
 def main():
-
+	'''
+		Function: main
+		Responsible for control all other functions
+	'''
 	for e in range(EPOCH_SIZE):
 
 		print("epoch", e)
 
 		begin = time.time()
 		pop = []
-		for i in range(POPULATION_SIZE):
+		for i in range(2*POPULATION_SIZE):
 			aux = population_start()
 			pop.append([evaluate(aux), aux])
 		time_spent = time.time()-begin
 
 		best_global = pop[0]
-
-		value_before = pop[0][0]
 
 		vector_fitness = []
 		show = 10
@@ -210,11 +209,6 @@ def main():
 
 			best_individual = pop[0].copy()
 
-			value_now = best_individual[0]
-
-			DELTA = value_now - value_before
-			value_before = value_now
-
 			if best_individual[0] > best_global[0]:
 				best_global = copy.deepcopy(best_individual)
 
@@ -222,25 +216,22 @@ def main():
 			
 			print("generation %2d: %10.6lf time spent: %.2fs" 
 			%(i,best_individual[0], time_spent))
-
 			
 			if i == show:
 				show += 10
-				evaluate(best_global[1], render=True)
-				env.close()
+				#evaluate(best_global[1], render=True)
 			
-
 			if i == 15:
-				if best_global[0] < -5:
-					break
-			if i == 25:
 				if best_global[0] < 0:
 					break
+			if i == 25:
+				if best_global[0] < 2:
+					break
 			if i == 50:
-				if best_global[0] < 5:
+				if best_global[0] < 10:
 					break
 			if i == 60:
-				if best_global[0] < 7:
+				if best_global[0] < 15:
 					break
 
 			# fitness
@@ -255,9 +246,11 @@ def main():
 				break
 
 			new_pop = []
+
 			for j in range(HALL_FAME):
 				aux = copy.deepcopy(pop[j][1])
-				new_pop.append([evaluate(aux), aux])
+				b1, b2 = evaluate(aux), evaluate(aux)
+				new_pop.append([max(b1, b2), aux])
 
 			for j in range(ELITE_SIZE):
 				aux = mutation(copy.deepcopy(pop[j][1]))
@@ -266,21 +259,16 @@ def main():
 			generate_children = (POPULATION_SIZE - ELITE_SIZE - HALL_FAME) // 2
 
 			for j in range(generate_children):
-				par1 = tournament(pop)
-				par2 = tournament(pop)
+				par1, par2 = tournament(copy.deepcopy(pop)), tournament(copy.deepcopy(pop))
 
 				child1, child2 = crossover(par1[1], par2[1])
-
-				eval1 = evaluate(child1)
-				eval2 = evaluate(child2)
+				eval1, eval2 = evaluate(child1), evaluate(child2)
 
 				new_pop.append([eval1, child1])
 				new_pop.append([eval2, child2])
 
 			pop[:] = new_pop
 			time_spent = time.time()-begin
-		
-		env.close()
 
 if __name__ == "__main__":
 
@@ -290,5 +278,5 @@ if __name__ == "__main__":
 		evaluate(load(sys.argv[1]), render=True)
 		exit(0)
 
-		# Call main function
+	# Call main function
 	main()

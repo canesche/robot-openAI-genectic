@@ -24,8 +24,6 @@
 	\end{large}
 
 
-
-
 \section{Informações essenciais}
 
 O código fonte pode ser encontrado no github pelo link: 
@@ -56,14 +54,14 @@ O objetivo do trabalho é fazer com que o robô bípede (Figura 1) aprenda a and
      \centering
      \includegraphics[scale=0.5]{img/robot_begin.png}
      \caption{Robô bípede no cenário}
-     \label{fig1}
+     \label{fig:robotbegin}
 \end{figure}
 
 \section{Solução proposta}
 
-Abaixo tem um esquema de como foi modelado o problema: \\
+Abaixo tem uma abordagem de como foi modelado o problema: \\
 
-$\cdot$ \textbf{Gene ou Ação}: vetor de tamanho 4, definido pelos valores das ações dos joelhos e dos quadris.
+$\cdot$ \textbf{Gene ou Ação}: vetor de tamanho 4, definido pelos valores derivados pelos joelhos e dos quadris.
 
 $\cdot$ \textbf{Individuo}: Conjunto de ações ou conjunto de genes. No trabalho foi definido um valor constante de 16 ações. Esse valor foi escolhido empiricamente devido aos resultados obtidos pela função de adaptação.
 
@@ -76,6 +74,13 @@ $\cdot$ \textbf{Crossover}: Nessa etapa foi selecionado uma parte de tamanho ale
 $\cdot$ \textbf{Mutação}: Enfim, foi criado um grupo elite, no qual é formado pelos melhores (20 indivíduos) da atual geração. Eles possuem a probabilidade de serem gerados uma probabilidade para verificarem se serão mutados ou não em seus genes. Além disso, foi criado um hall da fama, sendo eles os melhores dos melhores das gerações e eles são sempre passados para as próximas gerações. Note que esses 5 super individuos tem a probabilidade de serem mutados, o fato aqui de usar esse artíficio é para que não percam os seus genes caso a próxima geração seja pior do que a anterior.
 
 \section{Resultados obtidos}
+
+\begin{figure}[!htb]
+     \centering
+     \includegraphics[scale=0.75]{img/melhor.png}
+     \caption{Melhor resultado obtido dentre várias épocas}
+     \label{fig:melhor}
+\end{figure}
 
 \section{Conclusão}
 
