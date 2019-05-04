@@ -28,6 +28,14 @@ EPSILON = 0.01
 DELTA = 0 
 env = gym.make("BipedalWalker-v2")
 
+class Individuo:
+	env = gym.make("BipedalWalker-v2")
+	def __init__(self):
+		self.action_init_size = 0 #random.randint(1, 10)
+		self.action_size = 16
+		self.action = [[random.uniform(-1,1) for _ in range(4)] for _ in range(self.action_size)]
+		self.action_init = [[random.uniform(-1,1) for _ in range(4)] for _ in range(self.action_init_size)]
+
 def population_start():
 	ind = []
 	for _ in range(GENE_INIT_SIZE+GENE_SIZE):
