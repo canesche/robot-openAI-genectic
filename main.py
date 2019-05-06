@@ -33,7 +33,7 @@ PERCENT_MUTATION = 0.3 	# Probability of 30% to mutate
 def population_start():
 	'''
 		Function: Population
-		It is begin create the population
+		Creating the begin population
 	'''
 	return [[random.uniform(-1,1) for _ in range(4)] for _ in range(GENE_INIT_SIZE+GENE_SIZE)]
 
@@ -82,7 +82,7 @@ def save(ind, e):
 		Responsible for saving the data of individual
 	'''
 	save_open = open("data/ind_best_epoch_"+str(e)+".txt", "w")
-	save_open.write(str(ind[0])+" "+GENE_INIT_SIZE+" "+GENE_SIZE+"\n")
+	save_open.write(str(ind[0])+" "+str(GENE_INIT_SIZE)+" "+str(GENE_SIZE)+"\n")
 	for i in range(len(ind[1])):
 		for j in range(len(ind[1][i])):
 			save_open.write(str(ind[1][i][j]))
@@ -127,7 +127,7 @@ def evaluate(p, limit_steps=500, render=False):
 	env.reset()
 	score = 0
 
-	print(GENE_INIT_SIZE, GENE_SIZE)
+	#print(GENE_INIT_SIZE, GENE_SIZE)
 
 	#step begin, size 4 of p
 	for i in range(GENE_INIT_SIZE):
@@ -171,7 +171,7 @@ def tournament(ind):
 	
 	return best_tournament
 
-def plot(value, e):
+def plot(value, x_label, y_label, name, e):
 	'''
 		Function: plot
 		Responsible for plotting graphics and statistics
@@ -180,7 +180,7 @@ def plot(value, e):
 	plt.plot(value)
 	plt.xlabel('Generations')
 	plt.ylabel('Adaptation value')
-	plt.savefig('figs/adaptation_epoch_'+str(e))
+	plt.savefig('figs/'+name+str(e))
 	
 def main():
 	'''
@@ -199,6 +199,7 @@ def main():
 		time_spent = time.time()-begin
 
 		best_global = pop[0]
+		average = sum(pop[:][0])
 
 		vector_fitness = []
 		show = 10
@@ -241,7 +242,8 @@ def main():
 
 				save(best_global, e)
 				
-				plot(vector_fitness, e)
+				x_label, y_label, name = 'Generations', 'Adaptation value', 'individual_epoch'+e
+				plot(vector_fitness,x_label, y_label, name, e)
 				
 				break
 

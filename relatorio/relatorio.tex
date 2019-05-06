@@ -10,7 +10,8 @@
 \usepackage{hyperref}
 \hypersetup{
 	colorlinks=true,
-    urlcolor=blue
+    urlcolor=blue,
+    linkcolor=black
 }
 
 \begin{document}
@@ -48,7 +49,7 @@ $\cdot$ \textit{python3 main.py data$\backslash$individualbest.txt}
 
 \section{Sobre o trabalho}
 
-O objetivo do trabalho é fazer com que o robô bípede (Figura 1) aprenda a andar por um caminho que muda ligeiramente a cada interação, utilizando como algoritmo de aprendizagem o algoritmo genético. O robo é controlado pelas ações dos joelhos e as duas juntas do quadril, sendo essas ações valores que variam dentre -1 a 1, nos quais são respectivamente as velocidades angulares do joelho 1, quadril 1, joelho 2, quadril 2. Além disso, o ambiente oferece também observações feitas pelos sensores do robo, no qual não foi utilizado nesse trabalho.
+\hspace{1cm}O objetivo do trabalho é fazer com que o robô bípede (Figura \ref{fig:robotbegin}) aprenda a andar por um caminho que muda ligeiramente a cada interação, utilizando como algoritmo de aprendizagem o algoritmo genético. O robo é controlado pelas ações dos joelhos e as duas juntas do quadril, sendo essas ações valores que variam dentre -1 a 1, nos quais são respectivamente as velocidades angulares do joelho 1, quadril 1, joelho 2, quadril 2. Além disso, o ambiente oferece também observações feitas pelos sensores do robo, no qual não foi utilizado nesse trabalho.
 
 \begin{figure}[!htb]
      \centering
@@ -59,7 +60,7 @@ O objetivo do trabalho é fazer com que o robô bípede (Figura 1) aprenda a and
 
 \section{Solução proposta}
 
-Abaixo tem uma abordagem de como foi modelado o problema: \\
+\hspace{1cm}Abaixo tem uma abordagem de como foi modelado o problema: \\
 
 $\cdot$ \textbf{Gene ou Ação}: vetor de tamanho 4, definido pelos valores derivados pelos joelhos e dos quadris.
 
@@ -75,6 +76,8 @@ $\cdot$ \textbf{Mutação}: Enfim, foi criado um grupo elite, no qual é formado
 
 \section{Resultados obtidos}
 
+\hspace{1cm}Na figura \ref{fig:melhor}, temos o melhor resultado dentre várias épocas considerando o número máximo de 500 passos pelo robô. Note que é vísivel vê o crescimento da função de adaptação ao passar as gerações e que seu maiores crescimentos foram em torno das gerações 20 á 40 e da gerações 70 á 80. No qual, seu valor máximo de fitness é na geração 79 com o valor de aproximadamente 45.   
+
 \begin{figure}[!htb]
      \centering
      \includegraphics[scale=0.75]{img/melhor.png}
@@ -82,7 +85,18 @@ $\cdot$ \textbf{Mutação}: Enfim, foi criado um grupo elite, no qual é formado
      \label{fig:melhor}
 \end{figure}
 
+\hspace{0.5cm}Do resultado acima, a melhor maneira como o robô "aprendeu" a andar foi se impulsonando com um dos joelhos e o outro joelho é utilizado para ser estabilizado no ambiente (Figura \ref{fig:robotwalk}). Aparentemente outras formas de andar pelo robô (e.g. caminhar como uma pessoa) sempre gerava em sua queda e o algoritmo gênetico o eliminava.
+
+\begin{figure}[!htb]
+     \centering
+     \includegraphics[scale=0.5]{img/robot_walk.png}
+     \caption{Robô bípede andando pelo cenário}
+     \label{fig:robotwalk}
+\end{figure}
+
 \section{Conclusão}
+
+\hspace{1cm}Enfim, o trabalho foi interessante no ponto de vista de aplicação dos conhecimentos sobre algoritmo gênetico obtidos na disciplina. Também vale ressaltar a importância do aprendizado... 
 
 
 \end{document}
