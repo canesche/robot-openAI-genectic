@@ -22,7 +22,7 @@ import copy
 MAX_GENERATIONS = 100 	# Max generation per epoch
 ACTIONS_SIZE = 500	  	# Max actions have a individual
 EPOCH_SIZE = 500		# Max epoch 		
-GENE_INIT_SIZE = 4		# Size of Gene just began
+GENE_INIT_SIZE = 4		# Size of Gene just begin
 GENE_SIZE = 16			# Size of Gene used on loop
 ELITE_SIZE = 10			# Best chosen who will mutate 
 HALL_FAME = 5			# Best of each generation
@@ -69,11 +69,19 @@ def mutation(ind):
 		Function: Mutation
 		For each gene, there is a chance for mutation
 	'''
-	for i in range(len(ind)):
-		for j in range(len(ind[i])):
+	# gene init
+	for i in range(GENE_INIT_SIZE):
+		for j in range(0,4):
 			n = random.random()
-			if n < PERCENT_MUTATION :
+			if n < PERCENT_MUTATION:
 				ind[i][j] += random.uniform(-0.5, 0.5)
+	# gene loop
+	for i in range(GENE_INIT_SIZE, GENE_SIZE):
+		for j in range(0,4):
+			n = random.random()
+			if n < PERCENT_MUTATION:
+				ind[i][j] += random.uniform(-0.5, 0.5)
+	
 	return ind
 
 def save(ind, e):
@@ -161,27 +169,65 @@ def tournament(ind):
 		Function: tournament
 		Responsible for creating tournament to choose the best between them
 	'''
-	best_tournament = ind[random.randint(0,POPULATION_SIZE-1)]
+	best = ind[random.randint(0,POPULATION_SIZE-1)]
 
 	participants = random.sample(range(0,POPULATION_SIZE-1), TOURNAMENT_SIZE)
 
 	for n in participants:
-		if best_tournament[0] < ind[n][0]:
-			best_tournament = ind[n]
+		if best[0] < ind[n][0]:
+			best = ind[n]
 	
-	return best_tournament
+	return best
 
-def plot(value, x_label, y_label, name, e):
+def plot(value, x_label, y_label, name, e, color='b'):
 	'''
 		Function: plot
 		Responsible for plotting graphics and statistics
 	'''
 	plt.clf() # clean the plot
-	plt.plot(value)
-	plt.xlabel('Generations')
-	plt.ylabel('Adaptation value')
+	plt.plot(value, color)
+	plt.xlabel(x_label)
+	plt.ylabel(y_label)
 	plt.savefig('figs/'+name+str(e))
-	
+
+def sum_fitness(p):
+	'''
+		Function: sum fitness
+		Sum the values of fitness
+	'''
+	soma = 0
+	for i in range(len(p)):
+		soma += p[i][0]
+	return soma
+
+def selection(pop):
+	'''
+		Function: selection
+		Selection the new populations to next generations
+	'''
+	new_pop = []
+
+	for j in range(HALL_FAME):
+		aux = copy.deepcopy(pop[j][1])
+		b1, b2 = evaluate(aux), evaluate(aux)
+		new_pop.append([max(b1, b2), aux])
+
+	for j in range(ELITE_SIZE):
+		aux = mutation(copy.deepcopy(pop[j][1]))
+		new_pop.append([evaluate(aux), aux])
+
+	generate_children = (POPULATION_SIZE - ELITE_SIZE - HALL_FAME) // 2
+
+	for j in range(generate_children):
+		par1, par2 = tournament(copy.deepcopy(pop)), tournament(copy.deepcopy(pop))
+
+		child1, child2 = crossover(par1[1], par2[1])
+		eval1, eval2 = evaluate(child1), evaluate(child2)
+
+		new_pop.append([eval1, child1])
+		new_pop.append([eval2, child2])
+	return new_pop
+
 def main():
 	'''
 		Function: main
@@ -193,15 +239,17 @@ def main():
 
 		begin = time.time()
 		pop = []
-		for i in range(2*POPULATION_SIZE):
+		for i in range(POPULATION_SIZE):
 			aux = population_start()
 			pop.append([evaluate(aux), aux])
 		time_spent = time.time()-begin
 
 		best_global = pop[0]
-		average = sum(pop[:][0])
 
 		vector_fitness = []
+		time_total = []
+		average_total = []
+
 		show = 10
 		for i in range(MAX_GENERATIONS):
 
@@ -209,6 +257,9 @@ def main():
 			pop.sort(reverse=True, key=lambda ind: ind[0])
 
 			best_individual = pop[0].copy()
+
+			average_total.append(sum_fitness(pop)/POPULATION_SIZE)
+			time_total.append(time_spent)
 
 			if best_individual[0] > best_global[0]:
 				best_global = copy.deepcopy(best_individual)
@@ -220,8 +271,9 @@ def main():
 			
 			if i == show:
 				show += 10
-				#evaluate(best_global[1], render=True)
+				evaluate(best_global[1], render=True)
 			
+			# cutoff worst results
 			if i == 15:
 				if best_global[0] < 0:
 					break
@@ -242,34 +294,19 @@ def main():
 
 				save(best_global, e)
 				
-				x_label, y_label, name = 'Generations', 'Adaptation value', 'individual_epoch'+e
+				x_label, y_label, name = 'Generations', 'Adaptation value', 'individual_epoch'
 				plot(vector_fitness,x_label, y_label, name, e)
+
+				x_label, y_label, name = 'Generations', 'Time spent', 'time_epoch'
+				plot(time_total,x_label, y_label, name, e, color='g')
+
+				x_label, y_label, name = 'Generations', 'Average adaptation value', 'average_epoch'
+				plot(average_total,x_label, y_label, name, e, color='y')
 				
 				break
 
-			new_pop = []
-
-			for j in range(HALL_FAME):
-				aux = copy.deepcopy(pop[j][1])
-				b1, b2 = evaluate(aux), evaluate(aux)
-				new_pop.append([max(b1, b2), aux])
-
-			for j in range(ELITE_SIZE):
-				aux = mutation(copy.deepcopy(pop[j][1]))
-				new_pop.append([evaluate(aux), aux])
-
-			generate_children = (POPULATION_SIZE - ELITE_SIZE - HALL_FAME) // 2
-
-			for j in range(generate_children):
-				par1, par2 = tournament(copy.deepcopy(pop)), tournament(copy.deepcopy(pop))
-
-				child1, child2 = crossover(par1[1], par2[1])
-				eval1, eval2 = evaluate(child1), evaluate(child2)
-
-				new_pop.append([eval1, child1])
-				new_pop.append([eval2, child2])
-
-			pop[:] = new_pop
+			pop[:] = selection(copy.deepcopy(pop))
+			
 			time_spent = time.time()-begin
 
 if __name__ == "__main__":

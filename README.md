@@ -17,3 +17,11 @@ pip3 install --user -r requirements.txt
 
 python3 main.py
 
+If you want to run a result, you can use this command on terminal:
+
+python3 main.py best.txt
+
+Thank you!
+
+![Robo](img/robot_begin.png)
+
